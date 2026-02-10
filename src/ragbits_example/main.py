@@ -1,10 +1,14 @@
 """
 Section 1: LLM Proxy — Streaming Chat API
 
-Step 1.3: Connect the LLM to Chat
-Streams LLM responses but doesn't use conversation history yet.
+A minimal streaming chat application using Ragbits.
+This establishes the foundational pattern that all subsequent sections build upon.
 
-Run with: ragbits api run ragbits_example.main:SimpleStreamingChat
+Run with CLI:
+    ragbits api run ragbits_example.main:SimpleStreamingChat
+
+Or programmatically:
+    python -m ragbits_example.main
 """
 
 from collections.abc import AsyncGenerator
@@ -17,7 +21,7 @@ from ragbits.core.prompt import ChatFormat
 
 
 class SimpleStreamingChat(ChatInterface):
-    """A streaming chat interface that proxies requests to an LLM."""
+    """A minimal streaming chat interface that proxies requests to any LLM provider."""
 
     def __init__(self) -> None:
         self.llm = LiteLLM(model_name="gpt-4o-mini")
@@ -28,9 +32,18 @@ class SimpleStreamingChat(ChatInterface):
         history: ChatFormat,
         context: ChatContext,
     ) -> AsyncGenerator[ChatResponse, None]:
-        """Process a chat message and stream the LLM response."""
-        conversation = [{"role": "user", "content": message}]
-        stream = self.llm.generate_streaming(conversation)
+        """
+        Process a chat message and stream the response.
+
+        Args:
+            message: The current user message
+            history: Previous messages in the conversation
+            context: Additional context (user info, settings, etc.)
+
+        Yields:
+            ChatResponse objects containing streamed text chunks
+        """
+        stream = self.llm.generate_streaming([*history, {"role": "user", "content": message}])
 
         async for chunk in stream:
             yield self.create_text_response(chunk)
