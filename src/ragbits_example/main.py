@@ -1,8 +1,8 @@
 """
 Section 1: LLM Proxy — Streaming Chat API
 
-Step 1.1: Create a Minimal Chat Interface
-A simple echo-based chat that demonstrates the ChatInterface contract.
+Step 1.2: Add an LLM
+Introduces LiteLLM but doesn't connect it to the chat method yet.
 
 Run with: ragbits api run ragbits_example.main:SimpleStreamingChat
 """
@@ -12,11 +12,15 @@ from collections.abc import AsyncGenerator
 from ragbits.chat.api import RagbitsAPI
 from ragbits.chat.interface import ChatInterface
 from ragbits.chat.interface.types import ChatContext, ChatResponse
+from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt import ChatFormat
 
 
 class SimpleStreamingChat(ChatInterface):
-    """A minimal chat interface that echoes user messages."""
+    """A chat interface with LLM initialized but not yet connected."""
+
+    def __init__(self) -> None:
+        self.llm = LiteLLM(model_name="gpt-4o-mini")
 
     async def chat(
         self,
