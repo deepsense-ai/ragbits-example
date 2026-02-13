@@ -60,6 +60,9 @@ ragbits api run ragbits_example.main:SimpleStreamingChat --reload
 ragbits api run ragbits_example.main:SimpleStreamingChat --debug
 ```
 
+## Deploying the Application
+In order to deploy the app on GCP follow instructions in [infrastructure/README.md](infrastructure/README.md)
+
 ## Project Structure
 
 ```
