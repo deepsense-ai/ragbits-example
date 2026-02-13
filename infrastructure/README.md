@@ -29,8 +29,8 @@ Before deploying, ensure you have the following installed and configured on your
     ```bash
     GCP_PROJECT="ds-ragbits-example"
     SERVICE_ACCOUNT_NAME="ragbits-deployer"
-- When you have both the GCP key in JSON file and `OPENAI_API_KEY` you can run the deployment - you must update the configuration variables in both the bash scripts before running `deploy_infra.sh` & `destroy_infra.sh`:
-    Edit the top configuration section of these scripts to match your environment. The configurations need to be matching between deploy and destroy in order to work correctly.
+- When you have both the GCP key in JSON file and `OPENAI_API_KEY` you can run the deployment - you must update the configuration variables in `config.sh` before running `deploy_infra.sh` & `destroy_infra.sh`:
+    Edit the top configuration section of this script to match your environment.
 
     **IMPORTANT**: Always run `destroy_infra.sh` after `deploy_infra.sh`, when the deployed app is not needed anymore to not generate costs
 
