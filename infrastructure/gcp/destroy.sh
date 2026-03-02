@@ -5,14 +5,14 @@ set -e
 source "$(dirname "$0")/../config.sh"
 
 # GCP Authentication
-gcloud config set project "$PROJECT_ID" --quiet
+gcloud config set project "$GCP_PROJECT_ID" --quiet
 
 # identyfing Artifact Registry
 echo "Fetching Repository URL from Tofu state..."
 cd infrastructure/gcp/terraform
 
 # initialize to ensure we can read the state
-tofu init -reconfigure -backend-config="bucket=$TF_STATE_BUCKET" > /dev/null
+tofu init -reconfigure -backend-config="bucket=$GCP_STATE_BUCKET" > /dev/null
 REPO_URL=$(tofu output -raw repository_url 2>/dev/null || echo "")
 
 # all images must be deleted from Artifact Registry before destroying the repo, or Tofu will fail.
@@ -33,15 +33,15 @@ fi
 
 # destroys Cloud Run, IAM, Secrets, Registry
 echo "Running OpenTofu Destroy..."
-tofu destroy -var="project_id=$PROJECT_ID" \
-             -var="region=$REGION" \
+tofu destroy -var="project_id=$GCP_PROJECT_ID" \
+             -var="region=$GCP_REGION" \
              -var="my_ip=${CURRENT_IP}/32" \
              -auto-approve
 
 # empties & destroys terraform state bucket
-echo "Destroying State Bucket gs://$TF_STATE_BUCKET..."
-gcloud storage rm -r "gs://$TF_STATE_BUCKET/**" --all-versions --quiet || true
-gcloud storage buckets delete "gs://$TF_STATE_BUCKET" --quiet || true
+echo "Destroying State Bucket gs://$GCP_STATE_BUCKET..."
+gcloud storage rm -r "gs://$GCP_STATE_BUCKET/**" --all-versions --quiet || true
+gcloud storage buckets delete "gs://$GCP_STATE_BUCKET" --quiet || true
 
 echo "---------------------------------------------------"
 echo "Destruction Complete. All resources removed."
