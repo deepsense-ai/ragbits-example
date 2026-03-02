@@ -4,6 +4,6 @@ output "repository_url" {
 }
 
 output "service_url" {
-  description = "The public URL of the chat service"
-  value       = google_cloud_run_v2_service.app.uri
+  description = "The Public URL (Load Balancer IP) of the application"
+  value = "http://${google_compute_global_forwarding_rule.forwarding_rule.ip_address}"
 }

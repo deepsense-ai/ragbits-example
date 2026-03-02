@@ -1,49 +1,55 @@
 # Ragbits Example deployment module
 
-This module contains the infrastructure-as-code (IaC) and deployment scripts necessary to package and deploy the `ragbits-example` application to GCP. The deployment utilizes **OpenTofu** for infrastructure provisioning and **Docker** for containerization.
+This module contains the infrastructure-as-code (IaC) and deployment scripts necessary to package and deploy the `ragbits-example` application to **GCP** and **AWS**. The deployment utilizes **OpenTofu** for infrastructure provisioning and **Docker** for containerization.
 
-## Architecture overview
+## Architecture Overview
 
-The deployment provisions the following GCP resources:
-* **Google Cloud Storage (GCS)**: stores Terraform state file
-* **Google Secret Manager**: stores`OPENAI_API_KEY` and injects it into the application at runtime
-* **Google Artifact Registry**: hosts the built Docker container images
-* **Google Cloud Run (v2)**: runs the example application
-* **Service Accounts & IAM**: dedicated identity provider (`ragbits-chat-sa`) for the Cloud Run service with permissions to access the Secret Manager
+The deployment provisions the following resources:
 
-## Prerequisites
+### Google Cloud Platform (GCP)
+* **Google Cloud Storage (GCS)**: stores Terraform state files.
+* **Google Secret Manager**: stores the `OPENAI_API_KEY` and injects it into the application.
+* **Google Artifact Registry**: hosts the built Docker container images.
+* **Google Cloud Run (v2)**: runs the application with ingress restricted to internal traffic and the Load Balancer.
+* **Cloud Armor & Global Load Balancer**: provides a public HTTP endpoint protected by a WAF that whitelists only your current IP address.
 
-Before deploying, ensure you have the following installed and configured on your local machine:
+### Amazon Web Services (AWS)
+* **Amazon S3**: stores Terraform state files
+* **AWS Secrets Manager**: stores the `OPENAI_API_KEY`
+* **Amazon ECR**: hosts the built Docker container images
+* **AWS App Runner**: runs the application
+* **AWS WAF**: attaches a Web Access Control List directly to the service to whitelist only your current IP address
 
-1.  **Google Cloud CLI (`gcloud`)** - authenticated (`gcloud auth login`) in the project you want to deploy into, for which a service account will be created in order for Terraform to run
-2.  **OpenTofu (`tofu`)**
-3.  **Docker (`docker`)**
+## How to deploy step by step
 
-## Access keys:
-1.  **GCP Service Account Key**: A JSON key file for a GCP service account with necessary permissions (Storage Admin, Cloud Run Admin, Secret Manager Admin, Artifact Registry Admin, IAM Admin). Check `get_gcp_key.ssh` to generate this JSON file.
-2.  **OpenAI API Key**: Required for the Ragbits application to function, get it from [here](https://platform.openai.com/api-keys) or your IT departement.
+Before deploying, ensure you have the following installed and configured:
 
-## Configuration & running the deployment
-- Before running the deployment itself first you need to get a service key for GCP with which deployment is authorized - fill in the fields in `get_gcp_key.ssh` and run it in order to generate the key.
-    
-    ```bash
-    GCP_PROJECT="ds-ragbits-example"
-    SERVICE_ACCOUNT_NAME="ragbits-deployer"
-- When you have both the GCP key in JSON file and `OPENAI_API_KEY` you can run the deployment - you must update the configuration variables in `config.sh` before running `deploy_infra.sh` & `destroy_infra.sh`:
-    Edit the top configuration section of this script to match your environment.
+1.  **Google Cloud CLI (`gcloud`)**
+2.  **AWS CLI (`aws`)**
+3.  **OpenTofu (`tofu`)**
+4.  **Docker (`docker`)**
+5.  **OpenAI API Key**: required for the application to function.
 
-    **IMPORTANT**: Always run `destroy_infra.sh` after `deploy_infra.sh`, when the deployed app is not needed anymore to not generate costs
+## Authorization
 
-    ```bash
-    PROJECT_ID="ds-ragbits-example" # your own project ID
-    REGION="europe-central2" # region closest to you
-    APP_NAME="ragbits-chat" # can stay default
-    TF_STATE_BUCKET="ragbits-example-deployment" # can stay default
-    GCP_KEY_FILE="infrastructure/gcp-key.json" # this is the hardcoded location of this file, should stay default
-    OPENAI_API_KEY="your-openai-api-key" # your own OpenAI API key
-- After you run `deploy_infra.sh` and it deploys successfully, you need to create a proxy tunnel, since the app is nonpublic and authorization is needed for connection. Do it by executing:
+Both cloud providers are configured to use your local **User Identity**, so you need to be authorized and all of the services mentioned here need to be activated in the project (in GCP case). 
 
-    ```bash 
-    gcloud run services proxy ragbits-chat --project ds-ragbits-example --region europe-central2 --port=8000
-- Finally you are able to connect to the app at `127.0.0.1:8000`
-- **Always remember to `destroy_infra.sh` after you are finished**
+### GCP Authorization
+To authorize yourself for GCP run:
+
+```bash
+gcloud auth application-default login --no-launch-browser # follow the instructions from the CLI
+```
+**IMPORTANT**: if there are any errors during deploy for GCP, there are probably due to service APIs not being enabled for your project, just follow the instructions in the terminal in that case  
+
+### AWS Authorization
+To authorize yourself for AWS run:
+
+```bash
+aws configure # follow the instructions from the CLI
+```
+
+### Configuration & running the deployment
+1. Update `infrastructure/config.sh` according to your needs
+2. Run `infrastructure/deploy_infra.sh` - the app should be available via the link outputted by the script (GCP version takes few minutes to boot, AWS deploy should be ready to connect when the script finishes)
+3. After you are done remember to run `infrastructure/destroy_infra.sh`

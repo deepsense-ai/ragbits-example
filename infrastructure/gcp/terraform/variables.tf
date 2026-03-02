@@ -20,3 +20,8 @@ variable "image_tag" {
   type        = string
   default     = "latest"
 }
+
+variable "my_ip" {
+  description = "dynamically fetched public IP address to whitelist in the Cloud Run ingress settings"
+  type        = string
+}
