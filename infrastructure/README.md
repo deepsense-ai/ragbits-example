@@ -38,6 +38,7 @@ Both cloud providers are configured to use your local **User Identity**, so you 
 To authorize yourself for GCP run:
 
 ```bash
+gcloud auth login --no-launch-browser # follow the instructions from the CLI
 gcloud auth application-default login --no-launch-browser # follow the instructions from the CLI
 ```
 **IMPORTANT**: if there are any errors during deploy for GCP, there are probably due to service APIs not being enabled for your project, just follow the instructions in the terminal in that case  
@@ -46,6 +47,7 @@ gcloud auth application-default login --no-launch-browser # follow the instructi
 To authorize yourself for AWS run:
 
 ```bash
+# important note: the region you set in this step must be the same as the one set in the config.sh
 aws configure # follow the instructions from the CLI
 ```
 

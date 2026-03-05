@@ -61,7 +61,7 @@ ragbits api run ragbits_example.main:SimpleStreamingChat --debug
 ```
 
 ## Deploying the Application
-In order to deploy the app on GCP follow instructions in [infrastructure/README.md](infrastructure/README.md)
+In order to deploy the app on GCP/AWS follow instructions in [infrastructure/README.md](infrastructure/README.md)
 
 ## Project Structure
 
@@ -71,6 +71,29 @@ ragbits-example/
 │   └── ragbits_example/
 │       ├── __init__.py
 │       └── main.py      # Chat application implementation
+├── infrastructure/      # IaaC for deploying the app on GCP or AWS
+│   ├── aws/
+│   │   ├── terraform/
+│   │   │   ├── backend.tf
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   ├── providers.tf
+│   │   │   └── variables.tf
+│   │   ├── deploy.sh
+│   │   └── destroy.sh
+│   ├── gcp/
+│   │   ├── terraform/
+│   │   │   ├── backend.tf
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   ├── providers.tf
+│   │   │   └── variables.tf
+│   │   ├── deploy.sh
+│   │   └── destroy.sh
+│   ├── config.sh
+│   ├── deploy_infra.sh
+│   ├── destroy_infra.sh
+│   └── README.md
 ├── pyproject.toml       # Project configuration and dependencies
 └── README.md
 ```
