@@ -1,8 +1,8 @@
 """
 Section 2: Application Configuration — Identity, Persistence & Customization
 
-Step 2.1: Customize the Application UI
-    Branded header, welcome message, starter questions, and page metadata.
+Step 2.2: Persist Conversation History
+    Conversations survive page reloads via file-based JSONL persistence.
 
 Run with CLI:
     uv run ragbits api run ragbits_example.main:SimpleStreamingChat
@@ -16,6 +16,7 @@ from collections.abc import AsyncGenerator
 from ragbits.chat.api import RagbitsAPI
 from ragbits.chat.interface import ChatInterface
 from ragbits.chat.interface.types import ChatContext, ChatResponse
+from ragbits.chat.persistence.file import FileHistoryPersistence
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt import ChatFormat
 
@@ -26,6 +27,9 @@ class SimpleStreamingChat(ChatInterface):
     """A streaming chat interface with custom branding and UI configuration."""
 
     ui_customization = ui_customization
+
+    conversation_history = True
+    history_persistence = FileHistoryPersistence("./chat_history")
 
     def __init__(self) -> None:
         self.llm = LiteLLM(model_name="gpt-4o-mini")
