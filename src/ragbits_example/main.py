@@ -1,8 +1,8 @@
 """
 Section 2: Application Configuration — Identity, Persistence & Customization
 
-Step 2.2: Persist Conversation History
-    Conversations survive page reloads via file-based JSONL persistence.
+Step 2.3: Let Users Choose Their Model
+    Settings form with a model picker; selection read from context at runtime.
 
 Run with CLI:
     uv run ragbits api run ragbits_example.main:SimpleStreamingChat
@@ -20,19 +20,20 @@ from ragbits.chat.persistence.file import FileHistoryPersistence
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt import ChatFormat
 
-from ragbits_example.config import ui_customization
+from ragbits_example.config import DEFAULT_MODEL, ui_customization, user_settings
 
 
 class SimpleStreamingChat(ChatInterface):
     """A streaming chat interface with custom branding and UI configuration."""
 
     ui_customization = ui_customization
+    user_settings = user_settings
 
     conversation_history = True
     history_persistence = FileHistoryPersistence("./chat_history")
 
     def __init__(self) -> None:
-        self.llm = LiteLLM(model_name="gpt-4o-mini")
+        self.llm = LiteLLM(model_name=DEFAULT_MODEL)
 
     async def chat(
         self,
@@ -51,7 +52,12 @@ class SimpleStreamingChat(ChatInterface):
         Yields:
             ChatResponse objects containing streamed text chunks
         """
-        stream = self.llm.generate_streaming([*history, {"role": "user", "content": message}])
+        model_name = DEFAULT_MODEL
+        if hasattr(context, "user_settings") and context.user_settings:
+            model_name = context.user_settings.get("model", DEFAULT_MODEL)
+
+        llm = LiteLLM(model_name=model_name)
+        stream = llm.generate_streaming([*history, {"role": "user", "content": message}])
 
         async for chunk in stream:
             yield self.create_text_response(chunk)
