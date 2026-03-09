@@ -1,8 +1,8 @@
 """
 Section 2: Application Configuration — Identity, Persistence & Customization
 
-Step 2.3: Let Users Choose Their Model
-    Settings form with a model picker; selection read from context at runtime.
+Step 2.4: Track State Across Messages
+    HMAC-signed state update carries a message counter between turns.
 
 Run with CLI:
     uv run ragbits api run ragbits_example.main:SimpleStreamingChat
@@ -59,8 +59,12 @@ class SimpleStreamingChat(ChatInterface):
         llm = LiteLLM(model_name=model_name)
         stream = llm.generate_streaming([*history, {"role": "user", "content": message}])
 
+        message_count = context.state.get("message_count", 0) + 1
+
         async for chunk in stream:
             yield self.create_text_response(chunk)
+
+        yield self.create_state_update({"message_count": message_count})
 
 
 if __name__ == "__main__":
