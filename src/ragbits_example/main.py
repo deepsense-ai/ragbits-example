@@ -1,8 +1,8 @@
 """
 Section 2: Application Configuration — Identity, Persistence & Customization
 
-Step 2.6: Require Authentication
-    Credential-based login gate with demo users; greeting on first message.
+Step 2.7: Suggest Follow-up Messages
+    Clickable follow-up suggestions rendered after every response.
 
 Run with CLI:
     uv run ragbits api run ragbits_example.main:SimpleStreamingChat \
@@ -79,6 +79,12 @@ class SimpleStreamingChat(ChatInterface):
             yield self.create_text_response(chunk)
 
         yield self.create_state_update({"message_count": message_count})
+
+        yield self.create_followup_messages([
+            "Can you explain that in more detail?",
+            "Give me a practical example",
+            "What are the alternatives?",
+        ])
 
     async def save_feedback(
         self,
