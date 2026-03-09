@@ -1,14 +1,14 @@
 """
-Section 1: LLM Proxy — Streaming Chat API
+Section 2: Application Configuration — Identity, Persistence & Customization
 
-A minimal streaming chat application using Ragbits.
-This establishes the foundational pattern that all subsequent sections build upon.
+Step 2.1: Customize the Application UI
+    Branded header, welcome message, starter questions, and page metadata.
 
 Run with CLI:
-    ragbits api run ragbits_example.main:SimpleStreamingChat
+    uv run ragbits api run ragbits_example.main:SimpleStreamingChat
 
 Or programmatically:
-    python -m ragbits_example.main
+    uv run python -m ragbits_example.main
 """
 
 from collections.abc import AsyncGenerator
@@ -19,9 +19,13 @@ from ragbits.chat.interface.types import ChatContext, ChatResponse
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt import ChatFormat
 
+from ragbits_example.config import ui_customization
+
 
 class SimpleStreamingChat(ChatInterface):
-    """A minimal streaming chat interface that proxies requests to any LLM provider."""
+    """A streaming chat interface with custom branding and UI configuration."""
+
+    ui_customization = ui_customization
 
     def __init__(self) -> None:
         self.llm = LiteLLM(model_name="gpt-4o-mini")

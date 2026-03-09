@@ -9,6 +9,7 @@ This repository contains working code for each section of the Builder Journal. E
 | Section | What You Build | Key Concepts |
 |---------|----------------|--------------|
 | [1. LLM Proxy](https://ragbits.deepsense.ai/builder-journal/section-1-llm-proxy/) | Streaming chat API with web UI | ChatInterface, LiteLLM, RagbitsAPI |
+| [2. App Configuration](https://ragbits.deepsense.ai/builder-journal/section-2-app-configuration/) | Branded, persistent, authenticated chat | UICustomization, FileHistoryPersistence, UserSettings, FeedbackConfig, ListAuthenticationBackend |
 
 ## Prerequisites
 
@@ -42,7 +43,7 @@ export ANTHROPIC_API_KEY="your-api-key"
 Start the chat server:
 
 ```bash
-ragbits api run ragbits_example.main:SimpleStreamingChat
+uv run ragbits api run ragbits_example.main:SimpleStreamingChat
 ```
 
 Open http://127.0.0.1:8000 in your browser to access the chat interface.
@@ -51,13 +52,13 @@ Open http://127.0.0.1:8000 in your browser to access the chat interface.
 
 ```bash
 # Custom host and port
-ragbits api run ragbits_example.main:SimpleStreamingChat --host 0.0.0.0 --port 9000
+uv run ragbits api run ragbits_example.main:SimpleStreamingChat --host 0.0.0.0 --port 9000
 
 # Auto-reload for development
-ragbits api run ragbits_example.main:SimpleStreamingChat --reload
+uv run ragbits api run ragbits_example.main:SimpleStreamingChat --reload
 
 # Debug mode
-ragbits api run ragbits_example.main:SimpleStreamingChat --debug
+uv run ragbits api run ragbits_example.main:SimpleStreamingChat --debug
 ```
 
 ## Deploying the Application
@@ -70,6 +71,7 @@ ragbits-example/
 ├── src/
 │   └── ragbits_example/
 │       ├── __init__.py
+│       ├── config.py    # UI, forms, auth, and settings configuration
 │       └── main.py      # Chat application implementation
 ├── infrastructure/      # IaaC for deploying the app on GCP or AWS
 │   ├── aws/
