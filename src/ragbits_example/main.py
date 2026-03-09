@@ -1,8 +1,8 @@
 """
 Section 2: Application Configuration — Identity, Persistence & Customization
 
-Step 2.4: Track State Across Messages
-    HMAC-signed state update carries a message counter between turns.
+Step 2.5: Collect User Feedback
+    Like / dislike buttons with Pydantic-defined feedback forms.
 
 Run with CLI:
     uv run ragbits api run ragbits_example.main:SimpleStreamingChat
@@ -11,16 +11,23 @@ Or programmatically:
     uv run python -m ragbits_example.main
 """
 
+import json
+import logging
+import time
 from collections.abc import AsyncGenerator
+from pathlib import Path
+from typing import Any
 
 from ragbits.chat.api import RagbitsAPI
 from ragbits.chat.interface import ChatInterface
-from ragbits.chat.interface.types import ChatContext, ChatResponse
+from ragbits.chat.interface.types import ChatContext, ChatResponse, FeedbackType
 from ragbits.chat.persistence.file import FileHistoryPersistence
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt import ChatFormat
 
-from ragbits_example.config import DEFAULT_MODEL, ui_customization, user_settings
+from ragbits_example.config import DEFAULT_MODEL, feedback_config, ui_customization, user_settings
+
+logger = logging.getLogger(__name__)
 
 
 class SimpleStreamingChat(ChatInterface):
@@ -28,9 +35,11 @@ class SimpleStreamingChat(ChatInterface):
 
     ui_customization = ui_customization
     user_settings = user_settings
+    feedback_config = feedback_config
 
     conversation_history = True
     history_persistence = FileHistoryPersistence("./chat_history")
+    feedback_path = Path("./chat_history/feedback.jsonl")
 
     def __init__(self) -> None:
         self.llm = LiteLLM(model_name=DEFAULT_MODEL)
@@ -65,6 +74,24 @@ class SimpleStreamingChat(ChatInterface):
             yield self.create_text_response(chunk)
 
         yield self.create_state_update({"message_count": message_count})
+
+    async def save_feedback(
+        self,
+        message_id: str,
+        feedback: FeedbackType,
+        payload: dict[str, Any] | None = None,
+    ) -> None:
+        """Persist feedback to a JSONL file for later analysis."""
+        await super().save_feedback(message_id, feedback, payload)
+        self.feedback_path.parent.mkdir(parents=True, exist_ok=True)
+        record = {
+            "message_id": message_id,
+            "feedback": feedback.value,
+            "payload": payload,
+            "timestamp": time.time(),
+        }
+        with open(self.feedback_path, "a") as f:
+            f.write(json.dumps(record) + "\n")
 
 
 if __name__ == "__main__":
