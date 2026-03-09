@@ -4,6 +4,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ragbits.chat.auth import ListAuthenticationBackend
+from ragbits.chat.auth.session_store import InMemorySessionStore
 from ragbits.chat.interface.forms import FeedbackConfig, UserSettings
 from ragbits.chat.interface.ui_customization import HeaderCustomization, PageMetaCustomization, UICustomization
 
@@ -72,3 +74,24 @@ feedback_config = FeedbackConfig(
     dislike_enabled=True,
     dislike_form=DislikeFeedbackForm,
 )
+
+
+def get_auth_backend() -> ListAuthenticationBackend:
+    """Create an authentication backend with demo users."""
+    users = [
+        {
+            "user_id": "1",
+            "username": "admin",
+            "password": "admin",
+            "full_name": "Admin User",
+            "roles": ["admin"],
+        },
+        {
+            "user_id": "2",
+            "username": "user",
+            "password": "user",
+            "full_name": "Regular User",
+            "roles": ["user"],
+        },
+    ]
+    return ListAuthenticationBackend(users=users, session_store=InMemorySessionStore())

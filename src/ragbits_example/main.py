@@ -1,11 +1,12 @@
 """
 Section 2: Application Configuration — Identity, Persistence & Customization
 
-Step 2.5: Collect User Feedback
-    Like / dislike buttons with Pydantic-defined feedback forms.
+Step 2.6: Require Authentication
+    Credential-based login gate with demo users; greeting on first message.
 
 Run with CLI:
-    uv run ragbits api run ragbits_example.main:SimpleStreamingChat
+    uv run ragbits api run ragbits_example.main:SimpleStreamingChat \
+        --auth ragbits_example.config:get_auth_backend
 
 Or programmatically:
     uv run python -m ragbits_example.main
@@ -25,7 +26,7 @@ from ragbits.chat.persistence.file import FileHistoryPersistence
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt import ChatFormat
 
-from ragbits_example.config import DEFAULT_MODEL, feedback_config, ui_customization, user_settings
+from ragbits_example.config import DEFAULT_MODEL, feedback_config, get_auth_backend, ui_customization, user_settings
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,10 @@ class SimpleStreamingChat(ChatInterface):
         Yields:
             ChatResponse objects containing streamed text chunks
         """
+        if context.user and not history:
+            name = context.user.full_name or context.user.username
+            yield self.create_text_response(f"Hello, {name}! ")
+
         model_name = DEFAULT_MODEL
         if hasattr(context, "user_settings") and context.user_settings:
             model_name = context.user_settings.get("model", DEFAULT_MODEL)
@@ -95,5 +100,5 @@ class SimpleStreamingChat(ChatInterface):
 
 
 if __name__ == "__main__":
-    api = RagbitsAPI(SimpleStreamingChat)
+    api = RagbitsAPI(SimpleStreamingChat, auth_backend=get_auth_backend())
     api.run()
