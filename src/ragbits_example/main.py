@@ -1,8 +1,8 @@
 """
 Section 2: Application Configuration — Identity, Persistence & Customization
 
-Step 2.7: Suggest Follow-up Messages
-    Clickable follow-up suggestions rendered after every response.
+Step 2.8: Accept File Uploads
+    Uploaded files are parsed with Docling and injected as LLM system context.
 
 Run with CLI:
     uv run ragbits api run ragbits_example.main:SimpleStreamingChat \
@@ -14,10 +14,13 @@ Or programmatically:
 
 import json
 import logging
+import tempfile
 import time
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
+
+from fastapi import UploadFile
 
 from ragbits.chat.api import RagbitsAPI
 from ragbits.chat.interface import ChatInterface
@@ -25,6 +28,8 @@ from ragbits.chat.interface.types import ChatContext, ChatResponse, FeedbackType
 from ragbits.chat.persistence.file import FileHistoryPersistence
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt import ChatFormat
+from ragbits.document_search.documents.document import Document, DocumentMeta
+from ragbits.document_search.ingestion.parsers.docling import DoclingDocumentParser
 
 from ragbits_example.config import DEFAULT_MODEL, feedback_config, get_auth_backend, ui_customization, user_settings
 
@@ -44,6 +49,7 @@ class SimpleStreamingChat(ChatInterface):
 
     def __init__(self) -> None:
         self.llm = LiteLLM(model_name=DEFAULT_MODEL)
+        self.uploaded_files: dict[str, str] = {}
 
     async def chat(
         self,
@@ -70,8 +76,16 @@ class SimpleStreamingChat(ChatInterface):
         if hasattr(context, "user_settings") and context.user_settings:
             model_name = context.user_settings.get("model", DEFAULT_MODEL)
 
+        conversation: list[dict[str, str]] = []
+        if self.uploaded_files:
+            file_context = "\n\n".join(
+                f"=== {name} ===\n{content}" for name, content in self.uploaded_files.items()
+            )
+            conversation.append({"role": "system", "content": f"The user uploaded these files:\n\n{file_context}"})
+        conversation.extend([*history, {"role": "user", "content": message}])
+
         llm = LiteLLM(model_name=model_name)
-        stream = llm.generate_streaming([*history, {"role": "user", "content": message}])
+        stream = llm.generate_streaming(conversation)
 
         message_count = context.state.get("message_count", 0) + 1
 
@@ -103,6 +117,24 @@ class SimpleStreamingChat(ChatInterface):
         }
         with open(self.feedback_path, "a") as f:
             f.write(json.dumps(record) + "\n")
+
+    async def upload_handler(self, file: UploadFile) -> None:
+        """Store uploaded file content so the LLM can reference it in chat."""
+        content = await file.read()
+        filename = file.filename or "unnamed"
+
+        with tempfile.NamedTemporaryFile(suffix=f"_{filename}") as tmp:
+            tmp.write(content)
+            tmp.flush()
+            tmp_path = Path(tmp.name)
+            doc_meta = DocumentMeta.from_local_path(tmp_path)
+            document = Document.from_document_meta(doc_meta, tmp_path)
+            parser = DoclingDocumentParser(ignore_images=True)
+            elements = await parser.parse(document)
+            text = "\n".join(el.content for el in elements if hasattr(el, "content"))
+
+        self.uploaded_files[filename] = text
+        logger.info("File uploaded: %s (%d bytes)", filename, len(content))
 
 
 if __name__ == "__main__":

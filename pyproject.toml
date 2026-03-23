@@ -12,6 +12,7 @@ dependencies = [
     "ragbits-core",
     "ragbits-chat",
     "ragbits-cli",
+    "ragbits-document-search[docling]",
 ]
 
 [tool.hatch.metadata]
